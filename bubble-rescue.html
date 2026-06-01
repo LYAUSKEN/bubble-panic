@@ -245,7 +245,7 @@
         <p><b>◆ ダイバー救助</b><br>ある列が<b>上から下まで完全に空</b>になると、その列のダイバーが浮上します。全員浮上で船が迎えに来てクリア。</p>
         <p><b>◆ 🐟 マグロ</b><br>泡が6段以上積み上がると使えます（1ゲーム3回）。右から泳いで来て、通った<b>横ライン</b>の泡を壊します。壊した泡は<b>1個+50点</b>。</p>
         <p><b>◆ 🦑 イカ</b><br>泡が3段以上積み上がると呼び出せます（1ゲーム2回）。海中に登場したら<b>◀▶で発射する列を合わせ</b>、<b>⤒（早送り）で発射</b>。その<b>縦1列</b>を全部破壊します。壊した泡は1個+50点。さらに<b>発射から6秒以内に揃えたライン消去は2倍</b>！</p>
-        <p><b>◆ 点数</b><br>ライン消去 100×列数×列数 ／ 魚を外に出す +30 ／ 魚が泡を壊す +3〜12 ／ ダイバー救助 +150 ／ 全員救助 +800 ／ マグロ・イカ破壊 +50（1個）。<br><b>タイムボーナス</b>は10000から毎秒5減り、全員救助できた時に加点されます。<br>泡だらけでゲームオーバーになると、残った泡のぶん減点されます。</p>
+        <p><b>◆ 点数</b><br>ライン消去 100×列数×列数 ／ 魚を外に出す +30 ／ 魚が泡を壊す +3〜12 ／ ダイバー救助 +150 ／ 全員救助 +800 ／ マグロ・イカ破壊 +50（1個）。<br><b>タイムボーナス</b>は10000から毎秒5減ります。全員救助でクリアすると全額加算。ゲームオーバーになった場合は<b>救助した人数に応じた割合</b>だけ加算されます（救助1人ごとに10%ずつ。0人なら0%、5人なら50%、10人なら100%）。<br>さらにゲームオーバー時は、残った泡のぶん減点されます。</p>
         <p><b>◆ ステージ</b><br>クリアごとに海の景色が変化（昼→夕方→夜→夏→嵐）。進むほど難しくなります。</p>
       </div>
       <div id="rankPanel" class="hidden">
@@ -1898,6 +1898,14 @@
       if(cell){ nb++; penalty += (cell.bond>=3?12 : cell.bond>=2?6 : 3); }
     }
     const before=score;
+    // 救助人数に応じてタイムボーナスを加算。
+    // 0人=100%減(0%)、1人=90%減(10%)、…10人=0%減(100%)。残る割合 = rescued/DIVERS。
+    const keepRatio = Math.max(0, Math.min(1, rescued/DIVERS));
+    const awardedBonus = Math.round(timeBonus * keepRatio);
+    const lostBonus = timeBonus - awardedBonus;
+    addScore(awardedBonus); // 残った割合分のタイムボーナスを加点
+    wonTimeBonus=awardedBonus; // 表示用
+    timeBonus=0;
     addScore(-penalty); // 加点スコアから泡の減点を引く（0未満は0）
     // メッセージは用意しておくが、点滅演出が終わってから表示する
     const tt=document.getElementById('otitle');
@@ -1907,6 +1915,7 @@
     tt.classList.remove('hidden');
     ht.innerHTML=`<p>救助できたのは <b>${rescued}/${DIVERS}</b> 人。<br>
       加点スコア ${before}<br>
+      タイムボーナス +${awardedBonus}（${Math.round(keepRatio*100)}%）<br>
       泡の減点 −${penalty}（泡${nb}個）<br>
       <b>合計 ${score}</b></p>`;
     ht.classList.remove('hidden');
