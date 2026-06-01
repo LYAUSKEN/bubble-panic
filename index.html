@@ -135,12 +135,14 @@
     border-radius:18px;padding:0 0 16px;
     overflow-y:auto;
   }
-  /* 表紙：SVGの縦横比(453:675.9)を保って表示。ランキングは表紙の下に積む（重ならない）。 */
+  /* 表紙：縦横比(453:675.9)を保ちつつ高さを抑え、その下にランキングを見せる。 */
   #coverWrap{
-    position:relative;width:100%;max-width:453px;margin:0 auto;flex:0 0 auto;
+    position:relative;flex:0 0 auto;margin:0 auto;
     aspect-ratio:453 / 675.9;
+    height:min(64vh, 620px); width:auto; max-width:100%;
     transform:scale(1.0); transform-origin:center center;
   }
+  /* ゲームオーバー時は表紙を隠すので、この制限は関係なし */
   #coverBg{
     position:absolute;inset:0;width:100%;height:100%;
     object-fit:contain;z-index:0;pointer-events:none;display:block;
@@ -167,8 +169,26 @@
   /* ランキングは表紙の下に通常配置（重ならない）。遊び方は中央オーバーレイのまま。 */
   #overlay > #rankPanel{ position:relative; z-index:1; margin:0 16px; max-width:90%; width:auto; flex:0 0 auto; }
   #overlay > #howtoText{ position:absolute; z-index:4; left:50%; top:50%; transform:translate(-50%,-50%); margin:0; max-height:86%; overflow-y:auto; background:rgba(3,31,51,.92); padding:14px 16px; border-radius:14px; }
+  /* ゲームオーバー時は詳細を通常配置にして、その下にランキングを見せる */
+  #overlay.gameover{ justify-content:flex-start; padding-top:24px; }
+  #overlay.gameover > #howtoText{ position:relative; left:auto; top:auto; transform:none; margin:0 auto; max-height:none; }
+  #overlay.gameover > #rankPanel{ margin:4px auto 16px; }
+  /* ゲームオーバー時の REPLAY / TOP ボタンを75%サイズに（横並び） */
+  #overlay.gameover #goButtons{ order:5; }
+  #overlay.gameover #startBtn, #overlay.gameover #toTopBtn{
+    font-size:18px;padding:12px 33px;border-radius:14px;
+    box-shadow:0 4px 0 #c79a17,0 7px 15px rgba(0,0,0,.4);
+  }
+  #overlay.gameover #startBtn:active, #overlay.gameover #toTopBtn:active{ transform:translateY(3px); box-shadow:0 1px 0 #c79a17; }
   #howtoText{max-width:340px;text-align:left;font-size:13px;line-height:1.5;}
   #howtoText p{margin:0 0 8px;}
+  #howtoClose{
+    position:sticky;top:0;display:block;margin:0 0 10px auto;
+    font-family:'DotGothic16',sans-serif;font-size:14px;color:#063a66;
+    background:#ffd23f;border:0;border-radius:10px;padding:8px 16px;cursor:pointer;
+    box-shadow:0 3px 0 #c79a17;
+  }
+  #howtoClose:active{ transform:translateY(2px); box-shadow:0 1px 0 #c79a17; }
   #overlay.hidden{display:none;}
   #overlay h1{
     font-family:'Mochiy Pop One',sans-serif;margin:0;font-size:40px;
@@ -235,14 +255,19 @@
         <button id="hotStart" class="hotspot" aria-label="START"></button>
         <button id="hotHowto" class="hotspot" aria-label="HOW TO PLAY"></button>
       </div>
-      <button class="start" id="startBtn" style="display:none">START！</button>
+      <div id="goButtons" style="display:flex;gap:14px;justify-content:center;align-items:center;flex-wrap:wrap;">
+        <button class="start" id="startBtn" style="display:none">START！</button>
+        <button class="start" id="toTopBtn" style="display:none">TOP</button>
+      </div>
       <button class="howto" id="howtoBtn" style="display:none">How to play</button>
       <div id="howtoText" class="hidden">
+        <button id="howtoClose" aria-label="閉じる">✕ とじる</button>
         <p><b>◆ 目的</b><br>下から泡が湧き上がってきます。泡を整理して隙間を作り、海中の<b>10人のダイバー</b>を水面に浮上させ、船で全員救助すればステージクリア！</p>
         <p><b>◆ 操作</b><br>◀ ▶ 横移動 ／ ⟳ 回転 ／ ⤒ 早上げ（一気に上へ）</p>
         <p><b>◆ 泡の消し方</b><br><b>横一列がすべて泡で埋まると</b>、その列は強度に関係なく弾けて消えます。<br>泡には<b>強度</b>があり、強いほど大きく表示され消えにくいです。列が消えると、その<b>すぐ上の列</b>の泡は強度が1段ずつ下がります（強度2以上は1段下がって残り、強度1だった泡は消えます）。作用するのは消えた列の真上の1列だけです。<br>嵐の海の<b>黒い泡は強度5</b>。上の列が消えるたびに少しずつ小さくなり、強度1まで下がって初めて消えます（色は黒のまま）。</p>
         <p><b>◆ ダイバー救助</b><br>ある列が<b>上から下まで完全に空</b>になると、その列のダイバーが浮上します。全員浮上で船が迎えに来てクリア。</p>
         <p><b>◆ 🐟 マグロ</b><br>泡が6段以上積み上がると使えます（1ゲーム3回）。右から泳いで来て、通った<b>横ライン</b>の泡を壊します。壊した泡は<b>1個+50点</b>。</p>
+        <p><b>◆ 🦈 サメ</b><br>ステージ4から登場（1ゲーム1回）。マグロと同じく右から泳いで横ラインを壊しますが、体が大きく<b>マグロより1段多く（4段）</b>壊します。泡が6段以上で使えます。壊した泡は1個+50点。</p>
         <p><b>◆ 🦑 イカ</b><br>泡が3段以上積み上がると呼び出せます（1ゲーム2回）。海中に登場したら<b>◀▶で発射する列を合わせ</b>、<b>⤒（早送り）で発射</b>。その<b>縦1列</b>を全部破壊します。壊した泡は1個+50点。さらに<b>発射から6秒以内に揃えたライン消去は2倍</b>！</p>
         <p><b>◆ 点数</b><br>ライン消去 100×列数×列数 ／ 魚を外に出す +30 ／ 魚が泡を壊す +3〜12 ／ ダイバー救助 +150 ／ 全員救助 +800 ／ マグロ・イカ破壊 +50（1個）。<br><b>タイムボーナス</b>は10000から毎秒5減ります。全員救助でクリアすると全額加算。ゲームオーバーになった場合は<b>救助した人数に応じた割合</b>だけ加算されます（救助1人ごとに10%ずつ。0人なら0%、5人なら50%、10人なら100%）。<br>さらにゲームオーバー時は、残った泡のぶん減点されます。</p>
         <p><b>◆ ステージ</b><br>クリアごとに海の景色が変化（昼→夕方→夜→夏→嵐）。進むほど難しくなります。</p>
@@ -269,6 +294,7 @@
   </div>
   <div id="actionbar">
     <button class="actbtn" id="tunaBtn">🐟 マグロ <span id="tunaCount">3</span></button>
+    <button class="actbtn shark" id="sharkBtn">🦈 サメ <span id="sharkCount">1</span></button>
     <button class="actbtn squid" id="squidBtn">🦑 イカ <span id="squidCount">2</span></button>
   </div>
   <div id="debugbar">
@@ -288,6 +314,9 @@
   .actbtn.squid{ background:radial-gradient(circle at 35% 30%,#e6a6e0,#c850b0); color:#fff;
     box-shadow:0 4px 0 #8a2f7a,0 7px 14px rgba(0,0,0,.3); }
   .actbtn.squid:active{ box-shadow:0 1px 0 #8a2f7a,0 3px 8px rgba(0,0,0,.3); }
+  .actbtn.shark{ background:radial-gradient(circle at 35% 30%,#b8c4cc,#6c7a82); color:#fff;
+    box-shadow:0 4px 0 #3f4d54,0 7px 14px rgba(0,0,0,.3); }
+  .actbtn.shark:active{ box-shadow:0 1px 0 #3f4d54,0 3px 8px rgba(0,0,0,.3); }
   .actbtn{
     font-family:'DotGothic16','M PLUS Rounded 1c',sans-serif;font-weight:700;
     font-size:15px;color:#063a66;
@@ -314,21 +343,22 @@
   /* ---------- ランキング保存（共有ストレージ→localStorage→メモリの順にフォールバック） ---------- */
   const Rank = (()=>{
     const KEY='bubblePanicRanking';
-    let mem=[]; // メモリ用フォールバック
+    let mem=[]; // メモリ用フォールバック（常に最新を保持）
     const hasShared = (typeof window!=='undefined' && window.storage && typeof window.storage.get==='function');
     async function load(){
+      // 1) 共有ストレージ → 2) localStorage → 3) メモリ の順に、中身があるものを返す
       if(hasShared){
-        try{ const res=await window.storage.get(KEY,true); return res&&res.value? JSON.parse(res.value):[]; }
-        catch(e){ return []; }
+        try{ const res=await window.storage.get(KEY,true); if(res&&res.value){ const a=JSON.parse(res.value); if(a&&a.length){ mem=a.slice(); return a; } } }catch(e){}
       }
-      try{ const s=localStorage.getItem(KEY); return s? JSON.parse(s):[]; }
-      catch(e){ return mem.slice(); }
+      try{ const s=localStorage.getItem(KEY); if(s){ const a=JSON.parse(s); if(a&&a.length){ mem=a.slice(); return a; } } }catch(e){}
+      return mem.slice();
     }
     async function save(list){
+      mem=list.slice(); // メモリには必ず保存
       if(hasShared){
-        try{ await window.storage.set(KEY, JSON.stringify(list), true); return; }catch(e){}
+        try{ await window.storage.set(KEY, JSON.stringify(list), true); }catch(e){}
       }
-      try{ localStorage.setItem(KEY, JSON.stringify(list)); }catch(e){ mem=list.slice(); }
+      try{ localStorage.setItem(KEY, JSON.stringify(list)); }catch(e){}
     }
     // スコアを追加し、上位を返す。戻り値は {list, index}
     async function add(name, score, dateStr){
@@ -512,6 +542,7 @@
   // 大型イベント：マグロ(2分後)・潜水艦(1分5秒ごと)
   let elapsed=0;              // 経過時間(ms)
   let tunaUses=3, tuna=null;            // マグロ（ボタンで最大3回）
+  let sharkUses=0, shark=null;          // サメ（ステージ4以降・1回・マグロより1段多く消す）
   let subTimer=0, sub=null;             // 潜水艦
   const SUB_INTERVAL=65000;             // 1分5秒
   // イカのミサイル：ボタンで登場→自動往復→早送りで発射（最大2回）
@@ -961,6 +992,7 @@
 
     // 大型マグロ（横ラインの帯を横切る）
     if(tuna){ drawTuna((tuna.x+tuna.w/2)*CELL, (tuna.topRow+tuna.h/2)*CELL, tuna.w*CELL, tuna.h*CELL); }
+    if(shark){ drawShark((shark.x+shark.w/2)*CELL, (shark.topRow+shark.h/2)*CELL, shark.w*CELL, shark.h*CELL); }
     // 潜水艦（下から3段目を横切る）
     if(sub){ drawSub((sub.x+sub.w/2)*CELL, (sub.row+0.5)*CELL, sub.w*CELL, sub.h*CELL); }
 
@@ -1129,6 +1161,48 @@
     ctx.beginPath();
     ctx.moveTo(cx,cy+wob-r*0.4);ctx.lineTo(cx-r*0.15,cy+wob-r*0.6);ctx.lineTo(cx+r*0.2,cy+wob-r*0.42);
     ctx.closePath();ctx.fill();
+    ctx.restore();
+  }
+
+  function drawShark(cx, cy, w, h){
+    ctx.save();
+    const wob=Math.sin(performance.now()/220)*h*0.05;
+    // 体（左向き・灰色）
+    const grad=ctx.createLinearGradient(cx,cy-h/2,cx,cy+h/2);
+    grad.addColorStop(0,'#9aa6ad'); grad.addColorStop(0.5,'#6c7a82'); grad.addColorStop(1,'#46555c');
+    ctx.fillStyle=grad;
+    ctx.beginPath();
+    ctx.ellipse(cx,cy+wob,w*0.47,h*0.4,0,0,Math.PI*2);ctx.fill();
+    // とがった鼻先（左）
+    ctx.beginPath();
+    ctx.moveTo(cx-w*0.42,cy+wob-h*0.16);
+    ctx.lineTo(cx-w*0.5,cy+wob+h*0.02);
+    ctx.lineTo(cx-w*0.42,cy+wob+h*0.16);
+    ctx.closePath();ctx.fill();
+    // 尾びれ（右）
+    ctx.fillStyle='#46555c';
+    ctx.beginPath();
+    ctx.moveTo(cx+w*0.42,cy+wob);
+    ctx.lineTo(cx+w*0.58,cy+wob-h*0.5);
+    ctx.lineTo(cx+w*0.50,cy+wob);
+    ctx.lineTo(cx+w*0.58,cy+wob+h*0.5);
+    ctx.closePath();ctx.fill();
+    // 背びれ（大きめ）
+    ctx.beginPath();
+    ctx.moveTo(cx-w*0.02,cy+wob-h*0.36);ctx.lineTo(cx+w*0.16,cy+wob-h*0.74);ctx.lineTo(cx+w*0.22,cy+wob-h*0.3);
+    ctx.closePath();ctx.fill();
+    // 胸びれ
+    ctx.beginPath();
+    ctx.moveTo(cx-w*0.12,cy+wob+h*0.2);ctx.lineTo(cx-w*0.02,cy+wob+h*0.5);ctx.lineTo(cx+w*0.06,cy+wob+h*0.22);
+    ctx.closePath();ctx.fill();
+    // 口（白い歯）
+    ctx.strokeStyle='#fff';ctx.lineWidth=Math.max(1,h*0.04);
+    ctx.beginPath();ctx.moveTo(cx-w*0.4,cy+wob+h*0.16);ctx.lineTo(cx-w*0.18,cy+wob+h*0.2);ctx.stroke();
+    // 目
+    ctx.fillStyle='#fff';
+    ctx.beginPath();ctx.arc(cx-w*0.3,cy+wob-h*0.08,h*0.09,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#111';
+    ctx.beginPath();ctx.arc(cx-w*0.31,cy+wob-h*0.08,h*0.045,0,Math.PI*2);ctx.fill();
     ctx.restore();
   }
 
@@ -1367,6 +1441,7 @@
       elapsed+=dt;
       // マグロはボタンで出す（自動出現なし）
       if(tuna) updateTuna(dt);
+      if(shark) updateShark(dt);
       // 潜水艦：1分5秒ごとに左から登場
       subTimer+=dt;
       if(!sub && subTimer>=SUB_INTERVAL){ subTimer=0; spawnSub(); }
@@ -1375,6 +1450,7 @@
     draw();
     if(typeof refreshTunaBtn==='function') refreshTunaBtn();
     if(typeof refreshSquidBtn==='function') refreshSquidBtn();
+    if(typeof refreshSharkBtn==='function') refreshSharkBtn();
     { const db=document.getElementById('drop'); if(db) db.classList.toggle('squidaim', !!squid);
       const lb=document.getElementById('left'); if(lb) lb.classList.toggle('squidaim', !!squid);
       const rb=document.getElementById('right'); if(rb) rb.classList.toggle('squidaim', !!squid); }
@@ -1639,6 +1715,50 @@
     if(tuna.x+tuna.w < -1){ tuna=null; Sound.tunaStop(); }
   }
 
+  // サメ：マグロと同様だが大きく、帯が4行（マグロより1段多く消す）。1ゲーム1回。
+  function spawnShark(){
+    let deepest=SURFACE_Y;
+    for(let c=0;c<COLS;c++){
+      for(let r=ROWS-1;r>=SURFACE_Y;r--){ if(grid[r][c]){ if(r>deepest) deepest=r; break; } }
+    }
+    const topRow=Math.max(SURFACE_Y, deepest-3); // 最下行を含む4行の帯
+    shark={ x:COLS+4, w:8, h:4, topRow };
+    Sound.tunaStart();
+  }
+  function updateShark(dt){
+    shark.x -= 0.04*COLS*(dt/1000)*4.8;
+    const left=Math.floor(shark.x), right=Math.ceil(shark.x+shark.w);
+    let hit=false;
+    for(let k=0;k<shark.h;k++){
+      const rr=shark.topRow+k;
+      if(rr<SURFACE_Y||rr>=ROWS) continue;
+      for(let c=Math.max(0,left);c<Math.min(COLS,right);c++){
+        if(grid[rr][c]){
+          if(grid[rr][c].fish) releaseFish(grid[rr][c].fish);
+          addScore(50);
+          popBubbles.push({c,r:rr,t:0});
+          grid[rr][c]=null;
+          hit=true;
+        }
+      }
+    }
+    if(hit){
+      const bandTop=shark.topRow, bandBot=shark.topRow+shark.h-1;
+      for(let c=Math.max(0,left);c<Math.min(COLS,right);c++){
+        const below=[];
+        for(let r=bandBot+1;r<ROWS;r++){ if(grid[r][c]){ below.push(grid[r][c]); grid[r][c]=null; } }
+        let r=bandTop;
+        for(const cell of below){
+          grid[r][c]=cell;
+          if(cell.fish && cell.fish.state==='trapped'){ cell.fish.gr=r; cell.fish.gc=c; }
+          r++;
+        }
+        for(;r<ROWS;r++){ grid[r][c]=null; }
+      }
+    }
+    if(shark.x+shark.w < -1){ shark=null; Sound.tunaStop(); }
+  }
+
   // ---- 潜水艦（横4×縦2マス）：左から来て、進路全体に分散して泡を10個上げ、右へ去る ----
   function spawnSub(){
     sub={ x:-4, w:4, h:2, released:0, total:10, dropTimer:0, row:ROWS-3, motorSpin:0 }; // 下から3段目を通る
@@ -1820,6 +1940,34 @@
     if(octoInkTimer>=OCTO_INK_INTERVAL){ octoInkTimer=0; octopusInk(); }
   }
 
+  // ゲームオーバー画面から、ゲームを始めずにトップ（表紙）へ戻る。ランキングを見るため。
+  function backToTop(){
+    running=false;
+    if(Sound.tunaStop) Sound.tunaStop();
+    const ov=document.getElementById('overlay');
+    ov.classList.remove('hidden');
+    ov.classList.remove('gameover');
+    document.getElementById('otitle').innerHTML='Bubble<br>Panic';
+    document.getElementById('otitle').classList.add('hidden');
+    const cw=document.getElementById('coverWrap'); if(cw) cw.style.display='';
+    document.getElementById('startBtn').style.display='none';
+    document.getElementById('startBtn').textContent='START！';
+    document.getElementById('howtoBtn').style.display='none';
+    const tb=document.getElementById('toTopBtn'); if(tb) tb.style.display='none';
+    const ht=document.getElementById('howtoText');
+    ht.classList.add('hidden');
+    ht.innerHTML=HOWTO_HTML;
+    document.getElementById('success').classList.add('hidden');
+    // 最新のランキングを表示し、表紙の下のランキングまでスクロールして見せる
+    Rank.load().then(list=>{
+      renderRanking(list,-1);
+      const panel=document.getElementById('rankPanel');
+      if(panel && !panel.classList.contains('hidden')){
+        setTimeout(()=>{ panel.scrollIntoView({behavior:'smooth', block:'center'}); }, 60);
+      }
+    }).catch(()=>{});
+  }
+
   function startGame(advance){
     // advance=true: クリアして次のステージへ（スコア継続・ステージ+1）。それ以外は新規ゲーム。
     if(advance){ stage++; } else {
@@ -1851,7 +1999,10 @@
     running=true;gameOver=false;won=false;fast=false;riseTimer=0;winning=false;
     surfaceGapUsed=Array(COLS).fill(false);
     riseInterval=950;popBubbles=[];popFlash=[];strayTimer=0;floaters=[];timeAcc=0;timeBonus=10000;
-    elapsed=0;tunaUses=3;tuna=null;subTimer=0;sub=null;squidUses=2;squid=null;missiles=[];
+    // 自動で湧く泡の頻度をステージで変える（ステージ1は今の50%、ステージ4以降が現状の頻度）。
+    // 頻度倍率 s1=0.5, s2≈0.67, s3≈0.83, s4+=1.0 → 間隔 = 2000 / 倍率
+    { const mult = Math.min(1, 0.5 + (Math.max(1,stage)-1)*(0.5/3)); strayInterval = Math.round(2000/mult); }
+    elapsed=0;tunaUses=3;tuna=null;subTimer=0;sub=null;squidUses=2;squid=null;missiles=[];sharkUses=(stage>=4?1:0);shark=null;
     if(Sound.tunaStop) Sound.tunaStop();
     flashVisible=true;
     fishes=[];fishSpawnTimer=0;
@@ -1859,6 +2010,7 @@
     document.getElementById('score').textContent=0;
     document.getElementById('rescued').textContent=0;
     document.getElementById('overlay').classList.add('hidden');
+    document.getElementById('overlay').classList.remove('gameover');
     // 失敗画面で書き換えた表示を初期状態へ戻す
     document.getElementById('otitle').innerHTML='Bubble<br>Panic';
     document.getElementById('otitle').classList.add('hidden');
@@ -1866,7 +2018,8 @@
     // 表紙モードに戻す（表紙を表示し、通常ボタンは隠す）
     { const cw=document.getElementById('coverWrap'); if(cw) cw.style.display='';
       document.getElementById('startBtn').style.display='none';
-      document.getElementById('howtoBtn').style.display='none'; }
+      document.getElementById('howtoBtn').style.display='none';
+      const tb=document.getElementById('toTopBtn'); if(tb) tb.style.display='none'; }
     const hb=document.getElementById('howtoBtn');
     const ht=document.getElementById('howtoText');
     ht.classList.add('hidden');
@@ -1877,6 +2030,7 @@
     Sound.start();
     if(typeof refreshTunaBtn==='function') refreshTunaBtn();
     if(typeof refreshSquidBtn==='function') refreshSquidBtn();
+    if(typeof refreshSharkBtn==='function') refreshSharkBtn();
     requestAnimationFrame(loop);
   }
 
@@ -1923,6 +2077,8 @@
     { const cw=document.getElementById('coverWrap'); if(cw) cw.style.display='none'; }
     document.getElementById('startBtn').style.display='';
     document.getElementById('startBtn').textContent='REPLAY';
+    { const ov2=document.getElementById('overlay'); if(ov2) ov2.classList.add('gameover'); }
+    { const tb=document.getElementById('toTopBtn'); if(tb) tb.style.display=''; }
     // 全泡が5回点滅する演出を開始
     startGameOverFlash();
   }
@@ -2028,6 +2184,7 @@
   window.addEventListener('touchend',stopFast);
   window.addEventListener('blur',stopFast);
   document.getElementById('startBtn').addEventListener('click',()=>startGame(false));
+  { const tb=document.getElementById('toTopBtn'); if(tb) tb.addEventListener('click',backToTop); }
   document.getElementById('againBtn').addEventListener('click',()=>startGame(true));
   document.getElementById('howtoBtn').addEventListener('click',()=>{
     const ht=document.getElementById('howtoText');
@@ -2043,6 +2200,15 @@
   });
   if(hotName) hotName.addEventListener('click',()=>{
     const ni=document.getElementById('nameInput'); if(ni) ni.focus();
+  });
+  { const hc=document.getElementById('howtoClose');
+    if(hc) hc.addEventListener('click',()=>{ document.getElementById('howtoText').classList.add('hidden'); }); }
+  // 遊び方の「とじる」は再生成されることがあるので、委譲でも拾う
+  document.addEventListener('click',(e)=>{
+    const t=e.target;
+    if(t && (t.id==='howtoClose' || (t.closest && t.closest('#howtoClose')))){
+      const ht=document.getElementById('howtoText'); if(ht) ht.classList.add('hidden');
+    }
   });
 
   // デバッグ用ボタン
@@ -2104,6 +2270,26 @@
     tunaUses--;
     spawnTuna();
     refreshTunaBtn();
+  });
+  const sharkBtn=document.getElementById('sharkBtn');
+  function refreshSharkBtn(){
+    const cnt=document.getElementById('sharkCount');
+    if(cnt) cnt.textContent=sharkUses;
+    let maxStack=0;
+    for(let c=0;c<COLS;c++){ let h=0; for(let r=SURFACE_Y;r<ROWS;r++){ if(grid[r][c]) h++; } if(h>maxStack) maxStack=h; }
+    // ステージ4以降・6段以上積み上がっている時だけ押せる（残り1回）
+    sharkBtn.disabled = !(running && !winning && !boarding && sharkUses>0 && !shark && !tuna && maxStack>=6);
+    sharkBtn.style.display = (stage>=4) ? '' : 'none'; // ステージ4未満では表示しない
+  }
+  sharkBtn.addEventListener('click',()=>{
+    if(!running||winning||boarding) return;
+    if(sharkUses<=0 || shark || tuna) return;
+    let maxStack=0;
+    for(let c=0;c<COLS;c++){ let h=0; for(let r=SURFACE_Y;r<ROWS;r++){ if(grid[r][c]) h++; } if(h>maxStack) maxStack=h; }
+    if(maxStack<6) return;
+    sharkUses--;
+    spawnShark();
+    refreshSharkBtn();
   });
   const squidBtn=document.getElementById('squidBtn');
   function refreshSquidBtn(){
