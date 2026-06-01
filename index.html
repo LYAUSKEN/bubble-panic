@@ -130,16 +130,15 @@
   /* overlay */
   #overlay{
     position:absolute;inset:0;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;gap:14px;text-align:center;
+    align-items:center;justify-content:flex-start;gap:10px;text-align:center;
     background:#71bde1;
-    border-radius:18px;padding:0;
-    overflow:hidden;
+    border-radius:18px;padding:0 0 16px;
+    overflow-y:auto;
   }
-  /* 表紙：SVGの縦横比(453:675.9)を保って表示。絵柄を大きく見せるため拡大し、
-     青い余白は画面外へはみ出させる（背景も青なので自然になじむ）。中のボタンも一緒に拡大されて追従する。 */
+  /* 表紙：SVGの縦横比(453:675.9)を保って表示。ランキングは表紙の下に積む（重ならない）。 */
   #coverWrap{
-    position:relative;width:100%;max-width:453px;margin:0 auto;
-    aspect-ratio:453 / 675.9; align-self:stretch;
+    position:relative;width:100%;max-width:453px;margin:0 auto;flex:0 0 auto;
+    aspect-ratio:453 / 675.9;
     transform:scale(1.0); transform-origin:center center;
   }
   #coverBg{
@@ -165,8 +164,8 @@
     font-size:clamp(11px,3.4vw,15px);color:#002;box-shadow:none;padding:0;
   }
   #nameInput::placeholder{color:transparent;}
-  /* ランキング/遊び方は表紙の上に重ねて表示（クリップされても見えるように） */
-  #overlay > #rankPanel{ position:absolute; z-index:1; left:50%; bottom:8px; transform:translateX(-50%); margin:0; max-width:90%; max-height:20%; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  /* ランキングは表紙の下に通常配置（重ならない）。遊び方は中央オーバーレイのまま。 */
+  #overlay > #rankPanel{ position:relative; z-index:1; margin:0 16px; max-width:90%; width:auto; flex:0 0 auto; }
   #overlay > #howtoText{ position:absolute; z-index:4; left:50%; top:50%; transform:translate(-50%,-50%); margin:0; max-height:86%; overflow-y:auto; background:rgba(3,31,51,.92); padding:14px 16px; border-radius:14px; }
   #howtoText{max-width:340px;text-align:left;font-size:13px;line-height:1.5;}
   #howtoText p{margin:0 0 8px;}
