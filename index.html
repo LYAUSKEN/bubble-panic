@@ -260,9 +260,9 @@
         <p><b>◆ 操作</b><br>◀ ▶ 横移動 ／ ⟳ 回転 ／ ⤒ 早上げ（一気に上へ）</p>
         <p><b>◆ 泡の消し方</b><br><b>横一列がすべて泡で埋まると</b>、その列は強度に関係なく弾けて消えます。<br>泡には<b>強度</b>があり、強いほど大きく表示され消えにくいです。列が消えると、その<b>すぐ上の列</b>の泡は強度が1段ずつ下がります（強度2以上は1段下がって残り、強度1だった泡は消えます）。作用するのは消えた列の真上の1列だけです。<br>嵐の海の<b>黒い泡は強度5</b>。上の列が消えるたびに少しずつ小さくなり、強度1まで下がって初めて消えます（色は黒のまま）。</p>
         <p><b>◆ ダイバー救助</b><br>ある列が<b>上から下まで完全に空</b>になると、その列のダイバーが浮上します。全員浮上で船が迎えに来てクリア。</p>
-        <p><b>◆ 🐟 マグロ</b><br>泡が6段以上積み上がると使えます（1ゲーム3回）。右から泳いで来て、通った<b>横ライン</b>の泡を壊します。壊した泡は<b>1個+50点</b>。</p>
-        <p><b>◆ 🦈 サメ</b><br>ステージ4から登場（1ゲーム1回）。マグロと同じく右から泳いで横ラインを壊しますが、体が大きく<b>マグロより1段多く（4段）</b>壊します。泡が6段以上で使えます。壊した泡は1個+50点。</p>
-        <p><b>◆ 🦑 イカ</b><br>泡が3段以上積み上がると呼び出せます（1ゲーム2回）。海中に登場したら<b>◀▶で発射する列を合わせ</b>、<b>⤒（早送り）で発射</b>。その<b>縦1列</b>を全部破壊します。壊した泡は1個+50点。さらに<b>発射から6秒以内に揃えたライン消去は2倍</b>！</p>
+        <p><b>◆ 🐟 マグロ</b><br>泡が6段以上積み上がると使えます（1ゲーム4回）。右から泳いで来て、通った<b>横ライン</b>の泡を壊します。壊した泡は<b>1個+50点</b>。</p>
+        <p><b>◆ 🦈 サメ</b><br>ステージ4から登場（1ゲーム3回）。マグロと同じく右から泳いで横ラインを壊しますが、体が大きく<b>マグロより1段多く（4段）</b>壊します。泡が6段以上で使えます。壊した泡は1個+50点。</p>
+        <p><b>◆ 🦑 イカ</b><br>泡が3段以上積み上がると呼び出せます（1ゲーム4回）。海中に登場したら<b>◀▶で発射する列を合わせ</b>、<b>⤒（早送り）で発射</b>。その<b>縦1列</b>を全部破壊します。壊した泡は1個+50点。さらに<b>発射から6秒以内に揃えたライン消去は2倍</b>！</p>
         <p><b>◆ 点数</b><br>ライン消去 100×列数×列数 ／ 魚を外に出す +30 ／ 魚が泡を壊す +3〜12 ／ ダイバー救助 +150 ／ 全員救助 +800 ／ マグロ・イカ破壊 +50（1個）。<br><b>タイムボーナス</b>は10000から毎秒5減ります。全員救助でクリアすると全額加算。ゲームオーバーになった場合は<b>救助した人数に応じた割合</b>だけ加算されます（救助1人ごとに10%ずつ。0人なら0%、5人なら50%、10人なら100%）。<br>さらにゲームオーバー時は、残った泡のぶん減点されます。</p>
         <p><b>◆ ステージ</b><br>全5ステージ。クリアごとに海の景色が変化します（昼→夕方→夜→夏→嵐）。<b>ステージ5をクリアするとFINISH!!</b>。最終スコアで勝負！<br>ステージ4では<b>クジラ</b>が潮を吹いて泡を散らし、ステージ5では<b>大ダコ</b>が黒い泡をばらまきます。</p>
       </div>
@@ -289,9 +289,9 @@
     <button class="btn" id="drop">⤒</button>
   </div>
   <div id="actionbar">
-    <button class="actbtn" id="tunaBtn">🐟 マグロ <span id="tunaCount">3</span></button>
-    <button class="actbtn shark" id="sharkBtn">🦈 サメ <span id="sharkCount">1</span></button>
-    <button class="actbtn squid" id="squidBtn">🦑 イカ <span id="squidCount">2</span></button>
+    <button class="actbtn" id="tunaBtn">🐟 マグロ <span id="tunaCount">4</span></button>
+    <button class="actbtn shark" id="sharkBtn">🦈 サメ <span id="sharkCount">3</span></button>
+    <button class="actbtn squid" id="squidBtn">🦑 イカ <span id="squidCount">4</span></button>
   </div>
   <div id="debugbar">
     <button class="dbg" id="pause">⏸ 一時停止</button>
@@ -2294,7 +2294,7 @@
     // 自動で湧く泡の頻度をステージで変える（ステージ1は今の50%、ステージ4以降が現状の頻度）。
     // 頻度倍率 s1=0.5, s2≈0.67, s3≈0.83, s4+=1.0 → 間隔 = 2000 / 倍率
     { const mult = Math.min(1, 0.5 + (Math.max(1,stage)-1)*(0.5/3)); strayInterval = Math.round(2000/mult); }
-    elapsed=0;tunaUses=3;tuna=null;subTimer=0;sub=null;squidUses=2;squid=null;missiles=[];sharkUses=(stage>=4?1:0);shark=null;
+    elapsed=0;tunaUses=4;tuna=null;subTimer=0;sub=null;squidUses=4;squid=null;missiles=[];sharkUses=(stage>=4?3:0);shark=null;
     if(Sound.tunaStop) Sound.tunaStop();
     flashVisible=true;
     fishes=[];fishSpawnTimer=0;
