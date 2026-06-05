@@ -131,7 +131,7 @@
   #overlay{
     position:absolute;inset:0;display:flex;flex-direction:column;
     align-items:center;justify-content:flex-start;gap:10px;text-align:center;
-    background:#71bde1;
+    background:#2318ff;
     border-radius:18px;padding:0 0 16px;
     overflow-y:auto;
   }
@@ -154,11 +154,19 @@
   }
   #coverWrap .hotspot:active{ background:rgba(0,0,0,.06); }
   /* NAME: 下部の黄色エリア内の白い四角 rect x93 y412.6 w269 h36 / viewBox 453x675.9 */
-  #hotName{ left:20.5%; top:61.0%; width:59.4%; height:5.33%; }
-  /* START: rect x170.2 y479.3 w114.6 h35.5 */
-  #hotStart{ left:37.6%; top:70.9%; width:25.3%; height:5.25%; }
-  /* HOW TO PLAY: rect x149.6 y545.6 w155.8 h35.5 */
-  #hotHowto{ left:33.0%; top:80.7%; width:34.4%; height:5.25%; }
+  #hotName{ left:20.5%; top:58.5%; width:59.4%; height:5.0%; }
+  /* このタイトルSVGにはSTART/HOW TO PLAYの絵が無いので、見えるボタンとして表示する */
+  #hotStart, #hotHowto{
+    background:rgba(255,255,255,0.16);
+    border:2px solid rgba(255,255,255,0.7);
+    border-radius:14px;
+    color:#eaf6ff; font-family:'DotGothic16',sans-serif;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 3px 0 rgba(0,0,0,0.25);
+  }
+  #hotStart{ left:30%; top:69%; width:40%; height:7%; font-size:clamp(18px,5vw,26px); }
+  #hotHowto{ left:27%; top:79%; width:46%; height:6%; font-size:clamp(13px,3.6vw,18px); }
+  #hotStart:active, #hotHowto:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,0.25); background:rgba(255,255,255,0.26); }
   /* 名前入力欄は透明にしてNAMEボタンの上に重ねる */
   #nameInput{
     width:100%;height:100%;border:0;background:transparent;outline:none;
@@ -246,8 +254,8 @@
         <button id="hotName" class="hotspot" aria-label="なまえを入力">
           <input id="nameInput" type="text" maxlength="12" placeholder="なまえ" autocomplete="off">
         </button>
-        <button id="hotStart" class="hotspot" aria-label="START"></button>
-        <button id="hotHowto" class="hotspot" aria-label="HOW TO PLAY"></button>
+        <button id="hotStart" class="hotspot" aria-label="START">START</button>
+        <button id="hotHowto" class="hotspot" aria-label="HOW TO PLAY">HOW TO PLAY</button>
       </div>
       <div id="goButtons" style="display:flex;gap:14px;justify-content:center;align-items:center;flex-wrap:wrap;">
         <button class="start" id="startBtn" style="display:none">START！</button>
@@ -777,7 +785,7 @@
       ? { skyTop:'#0b1830', skyBot:'#26385c', seaTop:'#2f5a8f', seaMid:'#1f3f6e', seaBot:'#0c2444', night:true }
       : stage===2
       ? { skyTop:'#ff9e57', skyBot:'#ffd9a0', seaTop:'#9a5a8e', seaMid:'#5d4f8f', seaBot:'#1f2f5e' }
-      : { skyTop:'#7fd4ff', skyBot:'#cdf3ff', seaTop:'#1ba0d6', seaMid:'#0f6fae', seaBot:'#063a66' };
+      : { skyTop:'#7fd4ff', skyBot:'#cdf3ff', seaTop:'#2318ff', seaMid:'#1a12c8', seaBot:'#0f0a7a' };
 
     // 空（水上）
     const air=AIR_ROWS*CELL;
@@ -992,7 +1000,13 @@
 
     // 大型マグロ（横ラインの帯を横切る）
     if(tuna){ drawTuna((tuna.x+tuna.w/2)*CELL, (tuna.topRow+tuna.h/2)*CELL, tuna.w*CELL, tuna.h*CELL); }
-    if(shark){ drawShark((shark.x+shark.w/2)*CELL, (shark.topRow+shark.h/2)*CELL, shark.w*CELL, shark.h*CELL); }
+    if(shark){
+      const scx=(shark.x+shark.w/2)*CELL, scy=(shark.topRow+shark.h/2)*CELL;
+      ctx.save();
+      ctx.translate(scx,scy); ctx.scale(0.85,0.85); ctx.translate(-scx,-scy);
+      drawShark(scx, scy, shark.w*CELL, shark.h*CELL);
+      ctx.restore();
+    }
     // 潜水艦（下から3段目を横切る）
     if(sub){ drawSub((sub.x+sub.w/2)*CELL, (sub.row+0.5)*CELL, sub.w*CELL, sub.h*CELL); }
 
@@ -1226,16 +1240,27 @@
     const wob=Math.sin(performance.now()/220)*h*0.04;
     cy+=wob;
     const L=cx-w*0.5, R=cx+w*0.5; // 鼻先(左)・尾の付け根(右)
-    // ---- 体の輪郭（紡錘形・左向き）。尻尾側を長めに。 ----
+    // ---- サメの輪郭（胴体＋尾びれを一筆の1パスで描く＝境目なし）----
+    // 尾びれは付け根tipを基準に0.765倍。手計算で座標に反映する。
+    const tipX=cx+w*0.80, tipY=cy+h*0.04, ts=0.765;
+    const TX=(dx)=>tipX+dx*ts, TY=(dy)=>tipY+dy*ts; // tip基準のスケール済み座標
     ctx.beginPath();
-    ctx.moveTo(L+w*0.02, cy+h*0.04);                               // 鼻先（やや丸い）
-    ctx.bezierCurveTo(cx-w*0.36, cy-h*0.34, cx-w*0.10, cy-h*0.46, cx+w*0.10, cy-h*0.42); // 背中前半
-    ctx.bezierCurveTo(cx+w*0.30, cy-h*0.36, cx+w*0.46, cy-h*0.20, R, cy-h*0.05);          // 背中後半→尾の付け根（後方へ伸ばす）
-    ctx.lineTo(R, cy+h*0.08);                                                              // 尾の付け根（細い）
-    ctx.bezierCurveTo(cx+w*0.46, cy+h*0.18, cx+w*0.16, cy+h*0.40, cx-w*0.12, cy+h*0.42);  // お腹後半
-    ctx.bezierCurveTo(cx-w*0.32, cy+h*0.43, cx-w*0.42, cy+h*0.30, L+w*0.02, cy+h*0.04);   // お腹前半→鼻先
+    ctx.moveTo(L-w*0.04, cy-h*0.02);                               // 鼻先（とがり）
+    ctx.bezierCurveTo(cx-w*0.34, cy-h*0.36, cx-w*0.10, cy-h*0.46, cx+w*0.10, cy-h*0.42); // 背中前半
+    ctx.bezierCurveTo(cx+w*0.10, cy-h*0.44, cx+w*0.30, cy-h*0.40, cx+w*0.42, cy-h*0.30); // 背中後半
+    ctx.bezierCurveTo(cx+w*0.56, cy-h*0.20, cx+w*0.70, cy-h*0.06, tipX, tipY);           // 尾の付け根(tip)へ
+    // ここから尾びれ上葉（胴体の流れをそのまま受けて立ち上がる）
+    ctx.bezierCurveTo(TX(w*0.06), TY(-h*0.12), TX(w*0.18), TY(-h*0.60), TX(w*0.30), TY(-h*0.96)); // 上葉 先端
+    ctx.bezierCurveTo(TX(w*0.26), TY(-h*0.62), TX(w*0.20), TY(-h*0.28), TX(w*0.14), TY(-h*0.02)); // 上葉 内側→くびれ
+    ctx.bezierCurveTo(TX(w*0.12), TY(h*0.06), TX(w*0.12), TY(h*0.12), TX(w*0.16), TY(h*0.22));     // 下葉 内側へ
+    ctx.bezierCurveTo(TX(w*0.20), TY(h*0.36), TX(w*0.22), TY(h*0.52), TX(w*0.22), TY(h*0.62));     // 下葉 先端
+    ctx.bezierCurveTo(TX(w*0.16), TY(h*0.40), TX(w*0.08), TY(h*0.16), tipX, tipY+h*0.06);          // 下葉 外側→付け根(下)
+    // ここから胴体のお腹側へ戻る
+    ctx.bezierCurveTo(cx+w*0.70, cy+h*0.16, cx+w*0.50, cy+h*0.26, cx+w*0.30, cy+h*0.36);  // お腹後半
+    ctx.bezierCurveTo(cx+w*0.05, cy+h*0.44, cx-w*0.12, cy+h*0.40, cx-w*0.12, cy+h*0.40);  //（中間）
+    ctx.bezierCurveTo(cx-w*0.30, cy+h*0.30, cx-w*0.40, cy+h*0.10, L-w*0.04, cy-h*0.02);   // お腹前半→鼻先
     ctx.closePath();
-    // 背側の濃いグレー
+    // 単一色で塗る（境目が出ないようグラデも1つ）
     const gTop=ctx.createLinearGradient(cx,cy-h*0.46,cx,cy+h*0.1);
     gTop.addColorStop(0,'#5b6b73'); gTop.addColorStop(1,'#3f4d54');
     ctx.fillStyle=gTop; ctx.fill();
@@ -1255,41 +1280,18 @@
       ctx.beginPath();ctx.moveTo(gx,cy-h*0.16);ctx.quadraticCurveTo(gx-w*0.01,cy,gx,cy+h*0.14);ctx.stroke();
     }
     ctx.restore();
-    // ---- 尻尾の柄（体の後端から細く伸ばす）----
-    ctx.fillStyle='#42505a';
-    ctx.beginPath();
-    ctx.moveTo(R-w*0.01, cy-h*0.05);
-    ctx.quadraticCurveTo(cx+w*0.60, cy-h*0.02, cx+w*0.74, cy+h*0.02); // 上の縁
-    ctx.lineTo(cx+w*0.74, cy+h*0.08);
-    ctx.quadraticCurveTo(cx+w*0.60, cy+h*0.10, R-w*0.01, cy+h*0.10);  // 下の縁
-    ctx.closePath(); ctx.fill();
-    // ---- 尾びれ（柄の最先端に付く。鳥の羽のように面のある形）----
+    // ---- 第一背びれ（直角三角形：下が最短辺・右が垂直辺・左の斜辺が外へ弓なり）75%に縮小 ----
     ctx.fillStyle='#46555c';
     ctx.save();
-    const tipX=cx+w*0.74, tipY=cy+h*0.03;     // 柄の先端
-    ctx.translate(tipX, tipY); ctx.scale(1.15, 1.15); ctx.translate(-tipX, -tipY);
-    // 上葉（大きい羽）
+    { const ax=cx+w*0.04, ay=cy-h*0.34; ctx.translate(ax,ay); ctx.scale(-0.75,0.75); ctx.translate(-ax,-ay); }
     ctx.beginPath();
-    ctx.moveTo(tipX-w*0.01, tipY+h*0.02);
-    ctx.bezierCurveTo(tipX+w*0.02, tipY-h*0.30, tipX+w*0.08, tipY-h*0.62, tipX+w*0.16, tipY-h*0.84); // 内側の縁→上の角先端
-    ctx.bezierCurveTo(tipX+w*0.20, tipY-h*0.62, tipX+w*0.22, tipY-h*0.34, tipX+w*0.20, tipY-h*0.06); // 外側の縁（ふくらみ）
-    ctx.bezierCurveTo(tipX+w*0.16, tipY+h*0.02, tipX+w*0.06, tipY+h*0.04, tipX-w*0.01, tipY+h*0.02); // 付け根へ
-    ctx.closePath(); ctx.fill();
-    // 下葉（小さい羽）
-    ctx.beginPath();
-    ctx.moveTo(tipX-w*0.01, tipY+h*0.02);
-    ctx.bezierCurveTo(tipX+w*0.02, tipY+h*0.28, tipX+w*0.06, tipY+h*0.46, tipX+w*0.11, tipY+h*0.58); // 内側の縁→下の角先端
-    ctx.bezierCurveTo(tipX+w*0.15, tipY+h*0.44, tipX+w*0.17, tipY+h*0.26, tipX+w*0.16, tipY+h*0.08); // 外側の縁（ふくらみ）
-    ctx.bezierCurveTo(tipX+w*0.12, tipY+h*0.02, tipX+w*0.05, tipY+h*0.02, tipX-w*0.01, tipY+h*0.02); // 付け根へ
+    const baseY=cy-h*0.34, blx=cx-w*0.06, brx=cx+w*0.12, apexY=cy-h*1.02;
+    ctx.moveTo(blx, baseY);                 // 底辺 左
+    ctx.lineTo(brx, baseY);                 // 底辺 右（最短辺）
+    ctx.lineTo(brx, apexY);                 // 右の垂直辺を上へ → 頂点
+    ctx.quadraticCurveTo(cx-w*0.10, cy-h*0.62, blx, baseY); // 斜辺：外（左）へ弓なり
     ctx.closePath(); ctx.fill();
     ctx.restore();
-    // ---- 第一背びれ（大きな三角）----
-    ctx.fillStyle='#46555c';
-    ctx.beginPath();
-    ctx.moveTo(cx-w*0.02, cy-h*0.40);
-    ctx.bezierCurveTo(cx+w*0.06, cy-h*0.82, cx+w*0.12, cy-h*0.86, cx+w*0.14, cy-h*0.80);
-    ctx.bezierCurveTo(cx+w*0.16, cy-h*0.6, cx+w*0.18, cy-h*0.46, cx+w*0.20, cy-h*0.34);
-    ctx.closePath(); ctx.fill();
     // ---- 第二背びれ（小さい・後方）----
     ctx.beginPath();
     ctx.moveTo(cx+w*0.34,cy-h*0.24);ctx.lineTo(cx+w*0.40,cy-h*0.40);ctx.lineTo(cx+w*0.42,cy-h*0.22);
@@ -1313,9 +1315,9 @@
       const tx=L+w*0.05+i*w*0.026, ty=cy+h*0.20+i*h*0.006;
       ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(tx+w*0.012,ty);ctx.lineTo(tx+w*0.006,ty+h*0.05);ctx.closePath();ctx.fill();
     }
-    // ---- 目（小さく・前方）----
+    // ---- 目（やや後方・下寄り）----
     ctx.fillStyle='#111';
-    ctx.beginPath();ctx.arc(cx-w*0.36,cy-h*0.06,Math.max(1.5,h*0.045),0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(cx-w*0.28,cy-h*0.04,Math.max(1.5,h*0.045),0,Math.PI*2);ctx.fill();
     ctx.restore();
   }
 
